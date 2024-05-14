@@ -32,9 +32,8 @@
         background-color: white;
     }
     
-    .mapboxgl-popup {
-        max-width: 400px;
-        font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+    .mapboxgl-popup-content {
+    width: 300px;
     }
     
     #d3-container {
@@ -100,43 +99,49 @@ map.on('load', () => {
     });
 
     map.on('click', 'states-layer', (e) => {
-        const properties = e.features[0].properties;
-        let years = properties.year;
-        let creds = properties.creds;
+    const properties = e.features[0].properties;
+    let years = properties.year;
+    let creds = properties.creds;
 
-        if (typeof years === 'string') {
-            years = JSON.parse(years);
+    if (typeof years === 'string') {
+        years = JSON.parse(years);
+    }
+    if (typeof creds === 'string') {
+        creds = JSON.parse(creds);
+    }
+
+    let creditDetails = "";
+    if (Array.isArray(years) && Array.isArray(creds) && years.length === creds.length) {
+        for (let i = 0; i < years.length; i++) {
+            creditDetails += `Year ${years[i]}: ${creds[i]} credits<br>`;
         }
-        if (typeof creds === 'string') {
-            creds = JSON.parse(creds);
-        }
+    } else {
+        creditDetails = "Data format error or missing data.";
+    }
 
-        let content = `<strong>${properties.name}</strong><br>`;
+    let content = `<strong>${properties.name}</strong><br>${creditDetails}<div id="chart-container" style="height: 200px;"></div>`;
 
-        if (Array.isArray(years) && Array.isArray(creds) && years.length === creds.length) {
-            for (let i = 0; i < years.length; i++) {
-                content += `Year ${years[i]}: ${creds[i]} creds<br>`;
-            }
-            drawBarChart(years.map((year, index) => ({ name: year.toString(), creds: creds[index] })));
-        } else {
-            content += "Data format error or missing data.";
-        }
+    let popup = new mapboxgl.Popup()
+        .setLngLat(e.lngLat)
+        .setHTML(content)
+        .addTo(map);
 
-        new mapboxgl.Popup()
-            .setLngLat(e.lngLat)
-            .setHTML(content)
-            .addTo(map);
-    });
+    if (years.length === creds.length) {
+        let data = years.map((year, index) => ({ name: year.toString(), creds: creds[index] }));
+        drawBarChart(data, '#chart-container');
+    }
+});
 });
 
-function drawBarChart(data) {
-    d3.select("#d3-container").select("svg").remove();
+function drawBarChart(data, container) {
+    const svgContainer = d3.select(container);
+    svgContainer.html(''); // Clear previous contents if any
 
-    const margin = { top: 20, right: 20, bottom: 60, left: 60 }, // Increased bottom and left margins for labels
-        width = 480 - margin.left - margin.right,
-        height = 300 - margin.top - margin.bottom;
+    const margin = { top: 10, right: 10, bottom: 30, left: 30 },
+        width = 280 - margin.left - margin.right, // Adjusted for typical popup width
+        height = 150 - margin.top - margin.bottom; // Adjusted for typical popup height
 
-    const svg = d3.select("#d3-container").append("svg")
+    const svg = svgContainer.append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
         .append("g")
@@ -153,28 +158,10 @@ function drawBarChart(data) {
 
     svg.append("g")
         .attr("transform", "translate(0," + height + ")")
-        .call(d3.axisBottom(x))
-        .selectAll("text")
-        .style("text-anchor", "end")
-        .attr("dx", "-.8em")
-        .attr("dy", ".15em")
-        .attr("transform", "rotate(-45)");
-
-    svg.append("text")
-        .attr("text-anchor", "end")
-        .attr("x", width/2 + margin.left)
-        .attr("y", height + margin.top + 40)
-        .text("Year");
+        .call(d3.axisBottom(x));
 
     svg.append("g")
         .call(d3.axisLeft(y));
-
-    svg.append("text")
-        .attr("text-anchor", "end")
-        .attr("transform", "rotate(-90)")
-        .attr("y", -margin.left + 20)
-        .attr("x", -height/2)
-        .text("Credits");
 
     svg.selectAll(".bar")
         .data(data)
