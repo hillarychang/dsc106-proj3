@@ -100,7 +100,7 @@ map.on('load', () => {
 
     map.on('click', 'states-layer', (e) => {
     const properties = e.features[0].properties;
-    const stateName = properties.name; // Get the state name from the clicked feature
+    const stateName = properties.name;
     let years = properties.year;
     let creds = properties.creds;
 
@@ -129,7 +129,7 @@ map.on('load', () => {
 
     if (years.length === creds.length) {
         let data = years.map((year, index) => ({ name: year.toString(), creds: creds[index] }));
-        drawBarChart(data, '#chart-container');
+        drawBarChart(data, '#chart-container', stateName);
     }
 
 
@@ -141,7 +141,7 @@ map.on('load', () => {
 });
 });
 
-function drawBarChart(data, container) {
+function drawBarChart(data, container, stateName) {
     const svgContainer = d3.select(container);
     svgContainer.html(''); 
 
@@ -161,7 +161,7 @@ function drawBarChart(data, container) {
         .attr("y", -margin.top / 2)
         .attr("text-anchor", "middle")
         .style("font-size", "5.5px")
-        .text("Average number of students at each school in this state who have completed credit recovery");
+        .text("Average number of students at each school in " + stateName + " who have completed credit recovery");
 
     const x = d3.scaleBand()
         .range([0, width])
