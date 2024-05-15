@@ -66,7 +66,7 @@
     Both of the bars are the same color to signal to the users that both bars reflect the same type of data (the average number of students engaged with credit recovery per school in the state clicked on in the map). The colors in our map reflect the colors and style often associated with online, interactive maps, which furthers the utility of this visualization for users due to their previous encounters with such interfaces. On the map, the United States (inland + Alaska and Hawaii) is in a contrasting darker color to the rest of the areas on the map to bring attention to locations our main question aims to analyze. The bar chart only appears directly below the map immediately after the state is clicked on so that the users will be able to understand that the bar chart reflects the area on the map selected, as highlighted by the title of the bar chart and the pop up information that floats above the selected state in the bright color of white shining in contrast to the dim background to focus attention on the data values themselves (the average credits per year in the schools in that state).
     </p>
     <p>
-    Knowing that we wanted to focus on data regarding each of the schools across all U.S. states over multiple years, the first step of our groups’ development process involves choosing an appropriate dataset. An ideal dataset is one that includes data over a range of years, has no or very limited (less than 2%) missing values, and includes data on all 50 states. An early issue involved encountering datasets that only included data regarding a subset of the 50 states or data that contained many missing values in the desired column. To tackle this problem and our limited resources on jupyter notebooks in conjunction with APIs, we had to download the csv file of the data rather than requesting it via an API, though many csv files were too large for our computers to open so we had to find one of minimal size. After, we had to clean the data, filtering for specific years and dropping irrelevant columns, and finally grouping by year (2015, 2017) and state to find the average values (the average number of students participating in credit recovery programs at each school in each state). These values were then transferred over manually to the geojson file. These steps took a lengthy amount of time (7 hours) and were done via a collaboration of Deepika and Andrea.
+    Knowing that we wanted to focus on data regarding each of the schools across all U.S. states over multiple years, the first step of our groups’ development process involves choosing an appropriate dataset. An ideal dataset is one that includes data over a range of years, has no or very limited (less than 2%) missing values, and includes data on all 50 states. An early issue involved encountering datasets that only included data regarding a subset of the 50 states or data that contained many missing values in the desired column. To tackle this problem and our limited resources on jupyter notebooks in conjunction with APIs, we had to download the csv file of the data rather than requesting it via an API, though many csv files were too large for our computers to open so we had to find one of minimal size. After, we had to clean the data, filtering for specific years and dropping irrelevant columns, and finally grouping by year (2015, 2017) and state to find the average values (the average number of students participating in credit recovery programs at each school in each state). These values were then transferred over manually to the geojson file. These steps took a lengthy amount of time (9 hours) and were done via a collaboration of Deepika and Andrea.
     </p>
     <p>
     Simultaneously, Hillary mainly worked on coding the map first which took the most time out of the whole process. At first we had decided to do something similar to lab 6 where we would follow the steps on how to make a map, however instead of just looking at one small area in a state we wanted to look at all the states in America. Additionally, we wanted to add different features like having a specific state highlighted whenever the user hovered over it. However, this is when we came to our first road block where we could not get the states to be highlighted regardless of what we had done. We then scrapped the idea of using parts of what we had learned in lab 6, at this point this was around 3 hours of work. Afterwards, we decided then to look up documentation on mapboxgl and watch a few tutorials on how to create a map using svelte to highlight the states as the user hovers over it. However, again we struggled with getting the states highlighted, but this time we had a suspicion it was the csv. Despite our suspicion, we scrapped the code again to try using html instead of svelte (this trial took about 5 hours). After attending office hours, we realized that at the time we were importing our csv with the averages separately from the geojson file that contained the longitude and latitude of the states. So as we mentioned before, we then realized we had to include the data we got from the csv file to be included into the geojson file so we can bring in both simultaneously. This is when we were finally able to get to interact with each individual state. Finally, we utilized d3 to help make the bar plots that come up with clicking on a state (this took about 4 hours). Thus the aspect of trying to utilize and understand a framework like Svelte library with the d3 framework took the most amount of time and caused us the most struggle. Particularly, Hillary took a while to realize the geojson file had to be publicly hosted to work with the visualization. Researching how to make the geojson work with the visualization took a lot of time. Overall, the process took about 12 hours and was done by Hillary.
@@ -113,7 +113,7 @@ map.on('load', () => {
     let creditDetails = "";
     if (Array.isArray(years) && Array.isArray(creds) && years.length === creds.length) {
         for (let i = 0; i < years.length; i++) {
-            creditDetails += `Year ${years[i]}: ${creds[i]} credits<br>`;
+            creditDetails += `Year ${years[i]}: ${creds[i]} students<br>`;
         }
     } else {
         creditDetails = "Data format error or missing data.";
@@ -146,6 +146,14 @@ function drawBarChart(data, container) {
         .attr("height", height + margin.top + margin.bottom)
         .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
+    svg.append("text")
+        .attr("x", width / 2)
+        .attr("y", -margin.top / 2)
+        .attr("text-anchor", "middle")
+        .style("font-size", "9px")
+        .text("Average number of students at each school in " + stateName + " who have completed credit recovery");
 
     const x = d3.scaleBand()
         .range([0, width])
@@ -184,9 +192,29 @@ function drawBarChart(data, container) {
         .attr("width", x.bandwidth())
         .attr("y", d => y(d.creds))
         .attr("height", d => height - y(d.creds))
-        .attr("fill", "#007BFF");
+        .attr("fill", "#006400");
+
+    svg.append('text')
+        .attr('class', 'y-label')
+        .attr('text-anchor', 'end')
+        .attr('x', -2) // Adjust x position
+        .attr('y', -40) // Adjust y position
+        .attr('dy', '1em')
+        .attr('transform', 'rotate(-90)')
+        .style('font-size', '9px')
+        .text('Average Number of Students');
+
+    svg.append('text')
+        .attr('class', 'x-label')
+        .attr('text-anchor', 'end')
+        .attr('x', width / 2 + margin.left-40)
+        .attr('y', height + margin.bottom -15 ) // Adjust y position
+        .style('font-size', '10px') // Change font size
+        .text('Year');
+
 }
 
 </script>
 </body>
 </html>
+
